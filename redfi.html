@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RedFi — Valuation & Deal Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #E1594C;
+    --brand-deep: #B23A2F;
+    --brand-soft: #FBE6E2;
+    --teal: #3E7C74;
+    --teal-soft: #E4EFEC;
+    --bg: #FBF3F1;
+    --surface: #FFFFFF;
+    --surface-2: #F7EBE8;
+    --ink: #2A1B17;
+    --ink-soft: #6B5650;
+    --ink-faint: #9C8983;
+    --line: #EBD9D4;
+    --positive: #1F6F50;
+    --positive-soft: #E4F1EA;
+    --negative: #7A2620;
+    --negative-soft: #F3E2DF;
+    --focus: #B23A2F;
+    --radius: 4px;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --brand: #E9776B;
+      --brand-deep: #F0968D;
+      --brand-soft: #3A2320;
+      --teal: #6FADA3;
+      --teal-soft: #1B2C29;
+      --bg: #1B1210;
+      --surface: #241815;
+      --surface-2: #2B1E1A;
+      --ink: #F3E7E4;
+      --ink-soft: #C3ACA6;
+      --ink-faint: #8B7570;
+      --line: #3A2924;
+      --positive: #4FA582;
+      --positive-soft: #17261F;
+      --negative: #D98E86;
+      --negative-soft: #2E1E1B;
+      --focus: #E9776B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --brand: #E9776B;
+    --brand-deep: #F0968D;
+    --brand-soft: #3A2320;
+    --teal: #6FADA3;
+    --teal-soft: #1B2C29;
+    --bg: #1B1210;
+    --surface: #241815;
+    --surface-2: #2B1E1A;
+    --ink: #F3E7E4;
+    --ink-soft: #C3ACA6;
+    --ink-faint: #8B7570;
+    --line: #3A2924;
+    --positive: #4FA582;
+    --positive-soft: #17261F;
+    --negative: #D98E86;
+    --negative-soft: #2E1E1B;
+    --focus: #E9776B;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ---------- Top bar / brand ---------- */
+  .topbar {
+    border-bottom: 2px solid var(--brand);
+    padding: 22px 20px 16px;
+    margin-bottom: 8px;
+  }
+  .topbar-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .brand-block { display: flex; flex-direction: column; }
+  .brand-block .brand-name {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 30px;
+    color: var(--brand-deep);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .brand-block .brand-by {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.03em;
+    margin-top: 4px;
+  }
+
+  nav.tabs {
+    display: flex;
+    gap: 4px;
+  }
+  nav.tabs button {
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 9px 16px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius) var(--radius) 0 0;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  nav.tabs button:hover { color: var(--brand-deep); }
+  nav.tabs button.active {
+    color: var(--brand-deep);
+    background: var(--surface);
+    border-color: var(--line);
+    border-bottom-color: var(--surface);
+    position: relative;
+    top: 1px;
+  }
+  @media (max-width: 640px) {
+    nav.tabs { width: 100%; overflow-x: auto; }
+    nav.tabs button { flex: 1; white-space: nowrap; }
+  }
+
+  .page { display: none; padding-top: 28px; }
+  .page.active { display: block; }
+
+  /* ---------- Home page ---------- */
+  .home-hero {
+    padding: 20px 0 36px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 32px;
+  }
+  .home-hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.6vw, 36px);
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .home-hero p {
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  .tool-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 720px) { .tool-grid { grid-template-columns: 1fr; } }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--brand);
+    border-radius: var(--radius);
+    padding: 24px;
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .tool-card:hover {
+    box-shadow: 0 6px 18px rgba(178, 58, 47, 0.12);
+  }
+  .tool-card:nth-child(2) { border-top-color: var(--teal); }
+  .tool-card .tool-kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.03em;
+    margin-bottom: 8px;
+  }
+  .tool-card h3 {
+    font-family: var(--serif);
+    font-size: 21px;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  .tool-card p {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    margin: 0 0 14px;
+  }
+  .tool-card .go {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand-deep);
+  }
+  .tool-card:nth-child(2) .go { color: var(--teal); }
+
+  /* ---------- Shared calculator layout ---------- */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-head h2 {
+    font-family: var(--serif);
+    font-size: 23px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--ink);
+  }
+  .section-head .section-note {
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 780px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 18px 20px;
+  }
+  .panel h3 {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+  }
+  .panel h3:not(:first-child) { margin-top: 20px; }
+
+  .field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .field label {
+    font-size: 13px;
+    color: var(--ink-soft);
+    flex: 1;
+    min-width: 0;
+  }
+  .field input[type="text"],
+  .field input[type="number"] {
+    width: 108px;
+    font-family: var(--mono);
+    font-size: 13px;
+    text-align: right;
+    padding: 5px 7px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+  }
+  .field input[type="text"] { text-align: left; width: 150px; }
+  .field input:focus-visible,
+  nav.tabs button:focus-visible,
+  .tool-card:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
+  .field-row5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .field-row5 .cell { display: flex; flex-direction: column; gap: 3px; }
+  .field-row5 .cell span { font-size: 10px; color: var(--ink-faint); font-family: var(--mono); }
+  .field-row5 .cell input {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 12px;
+    text-align: right;
+    padding: 5px 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+  }
+
+  .outputs { display: flex; flex-direction: column; gap: 18px; }
+
+  .hero-stat {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--brand);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .hero-stat .value {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 32px;
+    color: var(--brand-deep);
+  }
+  .hero-stat .label { font-size: 13px; color: var(--ink-soft); }
+  .hero-stat.result-positive { border-left-color: var(--positive); }
+  .hero-stat.result-negative { border-left-color: var(--negative); }
+  .hero-stat.result-positive .value { color: var(--positive); }
+  .hero-stat.result-negative .value { color: var(--negative); }
+
+  table.data {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+  table.data caption {
+    text-align: left;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    caption-side: top;
+  }
+  table.data th, table.data td {
+    padding: 6px 8px;
+    text-align: right;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  table.data th:first-child, table.data td:first-child {
+    text-align: left;
+    font-family: var(--sans);
+    color: var(--ink-soft);
+    font-size: 12.5px;
+  }
+  table.data thead th {
+    color: var(--ink-faint);
+    font-weight: 500;
+    border-bottom: 1px solid var(--ink);
+  }
+  table.data tbody tr:last-child td { border-bottom: none; }
+  table.data tfoot td {
+    border-top: 1px solid var(--ink);
+    border-bottom: none;
+    font-weight: 600;
+    padding-top: 8px;
+  }
+
+  .table-scroll { overflow-x: auto; }
+
+  .sens-grid {
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .sens-grid th, .sens-grid td {
+    padding: 6px 9px;
+    text-align: center;
+    border: 1px solid var(--line);
+  }
+  .sens-grid thead th {
+    background: var(--surface-2);
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  .sens-grid td.center-cell {
+    background: var(--brand-soft);
+    font-weight: 600;
+  }
+  .sens-grid .corner {
+    background: var(--surface-2);
+    font-size: 10px;
+    color: var(--ink-faint);
+  }
+
+  .range-field { margin-bottom: 14px; }
+  .range-field .field { margin-bottom: 4px; }
+  .range-field input[type="range"] {
+    width: 100%;
+    accent-color: var(--brand);
+  }
+  .range-split {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 2px;
+  }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  footer .credit {
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .reset-link {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    font-family: var(--sans);
+  }
+
+  /* ---------- Guide page ---------- */
+  .guide-tool {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--brand);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 22px;
+  }
+  .guide-tool:nth-child(3) { border-top-color: var(--teal); }
+  .guide-tool h3 {
+    font-family: var(--serif);
+    font-size: 20px;
+    margin: 0 0 4px;
+    color: var(--ink);
+    border: none;
+    padding: 0;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+  .guide-tool .guide-sub {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    margin: 0 0 16px;
+  }
+  .guide-tool h4 {
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin: 16px 0 8px;
+    font-weight: 600;
+  }
+  .guide-tool h4:first-of-type { margin-top: 0; }
+  .guide-tool ol, .guide-tool ul {
+    margin: 0 0 4px;
+    padding-left: 20px;
+  }
+  .guide-tool li {
+    margin-bottom: 7px;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+  .guide-tool li strong { color: var(--ink); }
+  .guide-tool li .muted { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-block">
+      <div class="brand-name">RedFi</div>
+      <div class="brand-by">by Red code</div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-page="home" class="active">Home</button>
+      <button data-page="dcf">Valuation Studio</button>
+      <button data-page="ma">Deal Desk</button>
+      <button data-page="help">How to Use RedFi</button>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="home-hero">
+      <h1>Two calculators, one desk.</h1>
+      <p>RedFi pairs an intrinsic valuation model with a merger analysis, so you can value a company and then test whether paying a given price for it actually makes financial sense.</p>
+    </div>
+    <div class="tool-grid">
+      <button class="tool-card" data-goto="dcf">
+        <div class="tool-kicker">TOOL 1</div>
+        <h3>Valuation Studio</h3>
+        <p>Discounted cash flow model. Project free cash flow five years out, discount it back, and get an implied share price with a full sensitivity grid.</p>
+        <div class="go">Open Valuation Studio &rarr;</div>
+      </button>
+      <button class="tool-card" data-goto="ma">
+        <div class="tool-kicker">TOOL 2</div>
+        <h3>Deal Desk</h3>
+        <p>Accretion / dilution analysis. Enter a deal price, set the cash/stock mix, and see the effect on the acquirer's pro forma earnings per share.</p>
+        <div class="go">Open Deal Desk &rarr;</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- DCF PAGE -->
+  <div class="page" id="page-dcf">
+    <div class="section-head">
+      <h2>Valuation Studio — Discounted Cash Flow</h2>
+      <div class="section-note">5-year projection, perpetuity growth terminal value</div>
+    </div>
+
+    <div class="layout">
+      <div class="panel" id="dcf-inputs">
+        <h3>Company</h3>
+        <div class="field">
+          <label for="dcf-company">Name</label>
+          <input type="text" id="dcf-company" value="Meridian Supply Co.">
+        </div>
+        <div class="field">
+          <label for="dcf-revenue">Base revenue ($M)</label>
+          <input type="number" id="dcf-revenue" value="500" step="1">
+        </div>
+
+        <h3>Revenue growth (Yr 1&ndash;5)</h3>
+        <div class="field-row5" id="dcf-growth-row">
+          <div class="cell"><span>Y1 %</span><input type="number" class="dcf-g" value="12" step="0.5"></div>
+          <div class="cell"><span>Y2 %</span><input type="number" class="dcf-g" value="10" step="0.5"></div>
+          <div class="cell"><span>Y3 %</span><input type="number" class="dcf-g" value="8" step="0.5"></div>
+          <div class="cell"><span>Y4 %</span><input type="number" class="dcf-g" value="6" step="0.5"></div>
+          <div class="cell"><span>Y5 %</span><input type="number" class="dcf-g" value="5" step="0.5"></div>
+        </div>
+
+        <h3>Margins &amp; reinvestment</h3>
+        <div class="field">
+          <label for="dcf-margin-start">EBIT margin, Y1 (%)</label>
+          <input type="number" id="dcf-margin-start" value="18" step="0.5">
+        </div>
+        <div class="field">
+          <label for="dcf-margin-end">EBIT margin, Y5 (%)</label>
+          <input type="number" id="dcf-margin-end" value="21" step="0.5">
+        </div>
+        <div class="field">
+          <label for="dcf-da">D&amp;A (% of revenue)</label>
+          <input type="number" id="dcf-da" value="4" step="0.5">
+        </div>
+        <div class="field">
+          <label for="dcf-capex">Capex (% of revenue)</label>
+          <input type="number" id="dcf-capex" value="5" step="0.5">
+        </div>
+        <div class="field">
+          <label for="dcf-nwc">&Delta; NWC (% of revenue)</label>
+          <input type="number" id="dcf-nwc" value="1" step="0.5">
+        </div>
+
+        <h3>Discounting &amp; capital</h3>
+        <div class="field">
+          <label for="dcf-tax">Tax rate (%)</label>
+          <input type="number" id="dcf-tax" value="25" step="0.5">
+        </div>
+        <div class="field">
+          <label for="dcf-wacc">WACC (%)</label>
+          <input type="number" id="dcf-wacc" value="9" step="0.25">
+        </div>
+        <div class="field">
+          <label for="dcf-tgr">Terminal growth (%)</label>
+          <input type="number" id="dcf-tgr" value="2.5" step="0.25">
+        </div>
+        <div class="field">
+          <label for="dcf-netdebt">Net debt ($M)</label>
+          <input type="number" id="dcf-netdebt" value="200" step="1">
+        </div>
+        <div class="field">
+          <label for="dcf-shares">Shares out (M)</label>
+          <input type="number" id="dcf-shares" value="100" step="1">
+        </div>
+      </div>
+
+      <div class="outputs">
+        <div class="hero-stat" id="dcf-hero">
+          <div class="value" id="dcf-price">$0.00</div>
+          <div class="label">Implied value per share &mdash; <span id="dcf-company-echo">Meridian Supply Co.</span></div>
+        </div>
+
+        <div class="panel table-scroll">
+          <table class="data" id="dcf-table">
+            <caption>Projected free cash flow ($M)</caption>
+            <thead>
+              <tr><th>&nbsp;</th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th></tr>
+            </thead>
+            <tbody id="dcf-table-body"></tbody>
+            <tfoot>
+              <tr><td>PV of FCF</td><td id="pv1"></td><td id="pv2"></td><td id="pv3"></td><td id="pv4"></td><td id="pv5"></td></tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="panel">
+          <table class="data">
+            <caption>Enterprise to equity value bridge</caption>
+            <tbody>
+              <tr><td>Sum of PV of FCF (Yr 1&ndash;5)</td><td id="sum-pv"></td></tr>
+              <tr><td>Terminal value (undiscounted)</td><td id="tv"></td></tr>
+              <tr><td>PV of terminal value</td><td id="pv-tv"></td></tr>
+              <tr><td>Enterprise value</td><td id="ev"></td></tr>
+              <tr><td>Less: net debt</td><td id="netdebt-out"></td></tr>
+              <tr><td><strong>Equity value</strong></td><td id="equity-value"><strong></strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel table-scroll">
+          <table class="sens-grid" id="sens-table">
+            <caption style="font-family: var(--sans); font-size:13px; color: var(--ink-soft); margin-bottom:8px; display:block;">Sensitivity &mdash; implied share price</caption>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- M&A PAGE -->
+  <div class="page" id="page-ma">
+    <div class="section-head">
+      <h2>Deal Desk — Accretion / Dilution</h2>
+      <div class="section-note">Enter a deal price manually &mdash; e.g. the Valuation Studio output, or any other assumption</div>
+    </div>
+
+    <div class="layout">
+      <div class="panel" id="ma-inputs">
+        <h3>Acquirer</h3>
+        <div class="field">
+          <label for="acq-price">Share price ($)</label>
+          <input type="number" id="acq-price" value="52" step="0.5">
+        </div>
+        <div class="field">
+          <label for="acq-shares">Shares out (M)</label>
+          <input type="number" id="acq-shares" value="200" step="1">
+        </div>
+        <div class="field">
+          <label for="acq-ni">Net income ($M)</label>
+          <input type="number" id="acq-ni" value="400" step="1">
+        </div>
+
+        <h3>Target</h3>
+        <div class="field">
+          <label for="tgt-market-price">Current market price ($)</label>
+          <input type="number" id="tgt-market-price" value="35" step="0.5">
+        </div>
+        <div class="field">
+          <label for="tgt-deal-price">Offer price / share ($)</label>
+          <input type="number" id="tgt-deal-price" value="42" step="0.5">
+        </div>
+        <div class="field">
+          <label for="tgt-shares">Shares out (M)</label>
+          <input type="number" id="tgt-shares" value="80" step="1">
+        </div>
+        <div class="field">
+          <label for="tgt-ni">Net income ($M)</label>
+          <input type="number" id="tgt-ni" value="120" step="1">
+        </div>
+
+        <h3>Deal structure</h3>
+        <div class="range-field">
+          <div class="field">
+            <label for="stock-pct">Stock-financed</label>
+            <span id="stock-pct-echo" style="font-family: var(--mono); font-size:13px;">50%</span>
+          </div>
+          <input type="range" id="stock-pct" min="0" max="100" value="50" step="5">
+          <div class="range-split"><span>Cash</span><span>Stock</span></div>
+        </div>
+        <div class="field">
+          <label for="financing-rate">Cost of cash used (%)</label>
+          <input type="number" id="financing-rate" value="4" step="0.25">
+        </div>
+        <div class="field">
+          <label for="ma-tax">Tax rate (%)</label>
+          <input type="number" id="ma-tax" value="25" step="0.5">
+        </div>
+        <div class="field">
+          <label for="synergies">Pre-tax synergies ($M/yr)</label>
+          <input type="number" id="synergies" value="25" step="1">
+        </div>
+      </div>
+
+      <div class="outputs">
+        <div class="hero-stat" id="ma-hero">
+          <div class="value" id="ma-accretion">0.0%</div>
+          <div class="label" id="ma-hero-label">Accretion / (dilution) to acquirer EPS</div>
+        </div>
+
+        <div class="panel">
+          <table class="data">
+            <caption>Deal terms</caption>
+            <tbody>
+              <tr><td>Deal value (shares &times; offer price)</td><td id="deal-value"></td></tr>
+              <tr><td>Premium to current market price</td><td id="premium"></td></tr>
+              <tr><td>Cash consideration</td><td id="cash-consideration"></td></tr>
+              <tr><td>Stock consideration</td><td id="stock-consideration"></td></tr>
+              <tr><td>New shares issued (M)</td><td id="new-shares"></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <table class="data">
+            <caption>Pro forma net income &amp; EPS bridge</caption>
+            <tbody>
+              <tr><td>Acquirer standalone net income</td><td id="bridge-acq-ni"></td></tr>
+              <tr><td>+ Target net income</td><td id="bridge-tgt-ni"></td></tr>
+              <tr><td>+ After-tax synergies</td><td id="bridge-synergies"></td></tr>
+              <tr><td>&minus; After-tax cost of cash consideration</td><td id="bridge-financing"></td></tr>
+              <tr><td><strong>Pro forma combined net income</strong></td><td id="bridge-combined-ni"><strong></strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <table class="data">
+            <caption>EPS comparison</caption>
+            <tbody>
+              <tr><td>Acquirer standalone EPS</td><td id="standalone-eps"></td></tr>
+              <tr><td>Pro forma shares outstanding (M)</td><td id="proforma-shares"></td></tr>
+              <tr><td><strong>Pro forma EPS</strong></td><td id="proforma-eps"><strong></strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW TO USE PAGE -->
+  <div class="page" id="page-help">
+    <div class="section-head">
+      <h2>How to Use RedFi</h2>
+      <div class="section-note">What each input does, and what changes when you edit it</div>
+    </div>
+
+    <div class="guide-tool">
+      <h3>Valuation Studio</h3>
+      <p class="guide-sub">Estimates what a company is worth today, based on projecting its future cash flow and discounting it back to the present.</p>
+
+      <h4>STEPS</h4>
+      <ol>
+        <li><strong>Name the company</strong> <span class="muted">— just a label, doesn't affect the math.</span></li>
+        <li><strong>Set base revenue</strong> <span class="muted">— the company's current annual revenue, in millions.</span></li>
+        <li><strong>Set growth rates for Years 1–5</strong> <span class="muted">— how fast revenue grows each year. It's normal for this to decline over time as a company matures.</span></li>
+        <li><strong>Set EBIT margin for Year 1 and Year 5</strong> <span class="muted">— operating profit margin at the start and end; the years between are interpolated automatically.</span></li>
+        <li><strong>Set D&amp;A, capex, and ΔNWC</strong> <span class="muted">— reinvestment costs as a % of revenue, used to convert profit into actual cash.</span></li>
+        <li><strong>Set the tax rate</strong> <span class="muted">— applied to operating profit.</span></li>
+        <li><strong>Set WACC</strong> <span class="muted">— the discount rate; higher WACC means future cash is worth less today.</span></li>
+        <li><strong>Set terminal growth</strong> <span class="muted">— how fast the company grows forever after Year 5. Keep this small (2–3%) — it drives a large share of the result.</span></li>
+        <li><strong>Set net debt and shares outstanding</strong> <span class="muted">— used to convert total company value into a per-share price.</span></li>
+      </ol>
+
+      <h4>WHAT UPDATES AS YOU TYPE</h4>
+      <ul>
+        <li><strong>Implied share price</strong> <span class="muted">— the headline number at the top of the page.</span></li>
+        <li><strong>FCF table</strong> <span class="muted">— shows how each year's cash flow is built, from revenue down to free cash flow.</span></li>
+        <li><strong>Value bridge</strong> <span class="muted">— walks from discounted cash flows to enterprise value, then to equity value.</span></li>
+        <li><strong>Sensitivity grid</strong> <span class="muted">— shows how the share price shifts if your WACC or growth assumptions are off.</span></li>
+      </ul>
+    </div>
+
+    <div class="guide-tool">
+      <h3>Deal Desk</h3>
+      <p class="guide-sub">Tests whether buying a company outright, at a given price, would help or hurt the acquirer's earnings per share. This models acquiring the whole company — not buying shares as a market investor.</p>
+
+      <h4>STEPS</h4>
+      <ol>
+        <li><strong>Enter the acquirer's details</strong> <span class="muted">— its current share price, share count, and net income.</span></li>
+        <li><strong>Enter the target's current market price</strong> <span class="muted">— used to calculate the premium being paid.</span></li>
+        <li><strong>Enter the offer price</strong> <span class="muted">— what the acquirer is actually paying per share to buy out every target shareholder. You can plug in a Valuation Studio number here if you want to test that price.</span></li>
+        <li><strong>Enter the target's share count and net income.</strong></li>
+        <li><strong>Set the cash/stock mix</strong> <span class="muted">— how the acquirer is paying: 0% = all cash, 100% = all new stock issued.</span></li>
+        <li><strong>Set the cost of cash used</strong> <span class="muted">— the interest rate or opportunity cost tied to the cash portion.</span></li>
+        <li><strong>Set the tax rate and expected synergies</strong> <span class="muted">— annual cost savings or revenue gains expected from combining the two companies.</span></li>
+      </ol>
+
+      <h4>WHAT UPDATES AS YOU TYPE</h4>
+      <ul>
+        <li><strong>Accretion / (dilution) %</strong> <span class="muted">— the headline number. Green means the deal helps the acquirer's EPS, red means it hurts it.</span></li>
+        <li><strong>Deal terms</strong> <span class="muted">— total deal value, premium paid, and the cash/stock split in dollars.</span></li>
+        <li><strong>Net income bridge</strong> <span class="muted">— shows exactly how the combined company's net income is built.</span></li>
+        <li><strong>EPS comparison</strong> <span class="muted">— standalone EPS vs. pro forma EPS, side by side.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    <span>RedFi is a model for illustrative purposes. Inputs are editable assumptions, not live market data.
+    <button class="reset-link" id="reset-btn">Reset to sample values</button></span>
+    <span class="credit">Created by Redon Xheladini</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const fmtM = (n) => "$" + Math.round(n).toLocaleString("en-US") + "M";
+  const fmtPrice = (n) => "$" + n.toFixed(2);
+  const fmtPct = (n, d) => (n * 100).toFixed(d === undefined ? 1 : d) + "%";
+  const fmtPctSigned = (n, d) => (n >= 0 ? "+" : "") + (n * 100).toFixed(d === undefined ? 1 : d) + "%";
+
+  const STORAGE_KEY = "redfi-model-inputs-v1";
+
+  /* ---------- Navigation ---------- */
+  function showPage(name) {
+    document.querySelectorAll(".page").forEach((el) => el.classList.remove("active"));
+    document.querySelectorAll("nav.tabs button").forEach((btn) => btn.classList.remove("active"));
+    $("page-" + name).classList.add("active");
+    document.querySelector('nav.tabs button[data-page="' + name + '"]').classList.add("active");
+    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  }
+  document.querySelectorAll("nav.tabs button").forEach((btn) => {
+    btn.addEventListener("click", () => showPage(btn.getAttribute("data-page")));
+  });
+  document.querySelectorAll(".tool-card").forEach((card) => {
+    card.addEventListener("click", () => showPage(card.getAttribute("data-goto")));
+  });
+
+  /* ---------- Persistence ---------- */
+  function collectFieldIds() {
+    return [
+      "dcf-company","dcf-revenue","dcf-margin-start","dcf-margin-end","dcf-da",
+      "dcf-capex","dcf-nwc","dcf-tax","dcf-wacc","dcf-tgr","dcf-netdebt","dcf-shares",
+      "acq-price","acq-shares","acq-ni","tgt-market-price","tgt-deal-price","tgt-shares",
+      "tgt-ni","stock-pct","financing-rate","ma-tax","synergies"
+    ];
+  }
+
+  function saveState() {
+    try {
+      const state = {};
+      collectFieldIds().forEach((id) => { state[id] = $(id).value; });
+      state.growth = Array.from(document.querySelectorAll(".dcf-g")).map((el) => el.value);
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) { /* storage unavailable, ignore */ }
+  }
+
+  function loadState() {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      collectFieldIds().forEach((id) => {
+        if (state[id] !== undefined && $(id)) $(id).value = state[id];
+      });
+      if (Array.isArray(state.growth)) {
+        const gEls = document.querySelectorAll(".dcf-g");
+        state.growth.forEach((v, i) => { if (gEls[i]) gEls[i].value = v; });
+      }
+    } catch (e) { /* storage unavailable or corrupt, ignore */ }
+  }
+
+  function num(id) {
+    const v = parseFloat($(id).value);
+    return isNaN(v) ? 0 : v;
+  }
+  function pct(id) { return num(id) / 100; }
+
+  /* ---------- DCF ---------- */
+  function runDCF(waccOverride, tgrOverride) {
+    const revenue0 = num("dcf-revenue");
+    const growth = Array.from(document.querySelectorAll(".dcf-g")).map((el) => (parseFloat(el.value) || 0) / 100);
+    const mStart = pct("dcf-margin-start");
+    const mEnd = pct("dcf-margin-end");
+    const daPct = pct("dcf-da");
+    const capexPct = pct("dcf-capex");
+    const nwcPct = pct("dcf-nwc");
+    const tax = pct("dcf-tax");
+    const wacc = waccOverride !== undefined ? waccOverride : pct("dcf-wacc");
+    const tgr = tgrOverride !== undefined ? tgrOverride : pct("dcf-tgr");
+    const netDebt = num("dcf-netdebt");
+    const shares = num("dcf-shares");
+
+    let revenue = revenue0;
+    const years = [];
+    for (let y = 1; y <= 5; y++) {
+      revenue = revenue * (1 + (growth[y - 1] || 0));
+      const margin = mStart + (mEnd - mStart) * (y - 1) / 4;
+      const ebit = revenue * margin;
+      const nopat = ebit * (1 - tax);
+      const da = revenue * daPct;
+      const capex = revenue * capexPct;
+      const dNwc = revenue * nwcPct;
+      const fcf = nopat + da - capex - dNwc;
+      const discFactor = 1 / Math.pow(1 + wacc, y);
+      const pv = fcf * discFactor;
+      years.push({ y, revenue, margin, ebit, nopat, da, capex, dNwc, fcf, discFactor, pv });
+    }
+
+    const sumPV = years.reduce((s, yr) => s + yr.pv, 0);
+    const lastFcf = years[4].fcf;
+    const denom = (wacc - tgr);
+    const tv = denom > 0 ? (lastFcf * (1 + tgr)) / denom : 0;
+    const pvTv = tv * years[4].discFactor;
+    const ev = sumPV + pvTv;
+    const equityValue = ev - netDebt;
+    const sharePrice = shares > 0 ? equityValue / shares : 0;
+
+    return { years, sumPV, tv, pvTv, ev, netDebt, equityValue, sharePrice, wacc, tgr };
+  }
+
+  function renderDCF() {
+    const result = runDCF();
+    const company = $("dcf-company").value || "Company";
+    $("dcf-company-echo").textContent = company;
+    $("dcf-price").textContent = fmtPrice(result.sharePrice);
+
+    const tbody = $("dcf-table-body");
+    tbody.innerHTML = "";
+    const rows = [
+      ["Revenue", (yr) => fmtM(yr.revenue)],
+      ["EBIT margin", (yr) => fmtPct(yr.margin)],
+      ["NOPAT", (yr) => fmtM(yr.nopat)],
+      ["+ D&A", (yr) => fmtM(yr.da)],
+      ["− Capex", (yr) => fmtM(yr.capex)],
+      ["− Δ NWC", (yr) => fmtM(yr.dNwc)],
+      ["Free cash flow", (yr) => fmtM(yr.fcf)],
+    ];
+    rows.forEach(([label, fn]) => {
+      const tr = document.createElement("tr");
+      let html = "<td>" + label + "</td>";
+      result.years.forEach((yr) => { html += "<td>" + fn(yr) + "</td>"; });
+      tr.innerHTML = html;
+      tbody.appendChild(tr);
+    });
+    result.years.forEach((yr, i) => { $("pv" + (i + 1)).textContent = fmtM(yr.pv); });
+
+    $("sum-pv").textContent = fmtM(result.sumPV);
+    $("tv").textContent = fmtM(result.tv);
+    $("pv-tv").textContent = fmtM(result.pvTv);
+    $("ev").textContent = fmtM(result.ev);
+    $("netdebt-out").textContent = "(" + fmtM(result.netDebt) + ")";
+    $("equity-value").innerHTML = "<strong>" + fmtM(result.equityValue) + "</strong>";
+
+    renderSensitivity(result.wacc, result.tgr);
+  }
+
+  function renderSensitivity(baseWacc, baseTgr) {
+    const waccSteps = [-0.01, -0.005, 0, 0.005, 0.01];
+    const tgrSteps = [-0.01, -0.005, 0, 0.005, 0.01];
+    const table = $("sens-table");
+    let html = "<thead><tr><th class='corner'>WACC \\ g</th>";
+    tgrSteps.forEach((t) => { html += "<th>" + fmtPct(baseTgr + t) + "</th>"; });
+    html += "</tr></thead><tbody>";
+    waccSteps.forEach((w) => {
+      html += "<tr><th>" + fmtPct(baseWacc + w) + "</th>";
+      tgrSteps.forEach((t) => {
+        const wacc = baseWacc + w;
+        const tgr = baseTgr + t;
+        let price = 0;
+        if (wacc > tgr) {
+          const r = runDCF(wacc, tgr);
+          price = r.sharePrice;
+        }
+        const isCenter = w === 0 && t === 0;
+        html += "<td" + (isCenter ? " class='center-cell'" : "") + ">" + (wacc > tgr ? fmtPrice(price) : "—") + "</td>";
+      });
+      html += "</tr>";
+    });
+    html += "</tbody>";
+    table.innerHTML = html;
+  }
+
+  /* ---------- M&A ---------- */
+  function renderMA() {
+    const acqPrice = num("acq-price");
+    const acqShares = num("acq-shares");
+    const acqNI = num("acq-ni");
+    const tgtMarketPrice = num("tgt-market-price");
+    const dealPrice = num("tgt-deal-price");
+    const tgtShares = num("tgt-shares");
+    const tgtNI = num("tgt-ni");
+    const stockPct = num("stock-pct") / 100;
+    const cashPct = 1 - stockPct;
+    const financingRate = pct("financing-rate");
+    const tax = pct("ma-tax");
+    const synergies = num("synergies");
+
+    $("stock-pct-echo").textContent = Math.round(stockPct * 100) + "%";
+
+    const dealValue = tgtShares * dealPrice;
+    const cashConsideration = dealValue * cashPct;
+    const stockConsideration = dealValue * stockPct;
+    const newShares = acqPrice > 0 ? stockConsideration / acqPrice : 0;
+    const premium = tgtMarketPrice > 0 ? (dealPrice / tgtMarketPrice - 1) : 0;
+
+    const financingCostAfterTax = cashConsideration * financingRate * (1 - tax);
+    const synergiesAfterTax = synergies * (1 - tax);
+    const combinedNI = acqNI + tgtNI + synergiesAfterTax - financingCostAfterTax;
+    const proformaShares = acqShares + newShares;
+    const standaloneEPS = acqShares > 0 ? acqNI / acqShares : 0;
+    const proformaEPS = proformaShares > 0 ? combinedNI / proformaShares : 0;
+    const accretionPct = standaloneEPS !== 0 ? (proformaEPS - standaloneEPS) / standaloneEPS : 0;
+
+    $("deal-value").textContent = fmtM(dealValue);
+    $("premium").textContent = fmtPctSigned(premium);
+    $("cash-consideration").textContent = fmtM(cashConsideration);
+    $("stock-consideration").textContent = fmtM(stockConsideration);
+    $("new-shares").textContent = newShares.toFixed(1);
+
+    $("bridge-acq-ni").textContent = fmtM(acqNI);
+    $("bridge-tgt-ni").textContent = fmtM(tgtNI);
+    $("bridge-synergies").textContent = fmtM(synergiesAfterTax);
+    $("bridge-financing").textContent = "(" + fmtM(financingCostAfterTax) + ")";
+    $("bridge-combined-ni").innerHTML = "<strong>" + fmtM(combinedNI) + "</strong>";
+
+    $("standalone-eps").textContent = "$" + standaloneEPS.toFixed(2);
+    $("proforma-shares").textContent = proformaShares.toFixed(1);
+    $("proforma-eps").innerHTML = "<strong>$" + proformaEPS.toFixed(2) + "</strong>";
+
+    const heroEl = $("ma-hero");
+    const accEl = $("ma-accretion");
+    accEl.textContent = fmtPctSigned(accretionPct);
+    heroEl.classList.remove("result-positive", "result-negative");
+    if (accretionPct >= 0) {
+      heroEl.classList.add("result-positive");
+      $("ma-hero-label").textContent = "Accretive to acquirer EPS";
+    } else {
+      heroEl.classList.add("result-negative");
+      $("ma-hero-label").textContent = "Dilutive to acquirer EPS";
+    }
+  }
+
+  function renderAll() {
+    renderDCF();
+    renderMA();
+    saveState();
+  }
+
+  document.addEventListener("input", (e) => {
+    if (e.target.closest("#dcf-inputs") || e.target.closest("#ma-inputs")) {
+      renderAll();
+    }
+  });
+
+  $("reset-btn").addEventListener("click", () => {
+    try { window.localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+    window.location.reload();
+  });
+
+  loadState();
+  renderAll();
+})();
+</script>
+</body>
+</html>
